@@ -1,0 +1,28 @@
+{
+  "name": "talendor/laravel-stability-ai",
+  "description": "Stability AI package for Laravel",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Talendor\\StabilityAI\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Fabio Ferreira",
+      "email": "fabio86ferreira@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.2",
+    "laravel/framework": "^9.19"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Talendor\\StabilityAI\\StabilityAIServiceProvider"
+      ]
+    }
+  }
+}
