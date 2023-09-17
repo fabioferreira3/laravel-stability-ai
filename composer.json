@@ -14,7 +14,10 @@
       "email": "fabio86ferreira@gmail.com"
     }
   ],
-  "require": {},
+  "require": {
+    "php": ">=8.2",
+    "laravel/framework": "^9.19"
+  },
   "extra": {
     "laravel": {
       "providers": [
