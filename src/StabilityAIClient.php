@@ -72,7 +72,7 @@ class StabilityAIClient
 
             return $files;
         } catch (Throwable $err) {
-            Log::error("Error in textToImage: {$err->getMessage()}", ['exception' => $err]);
+            Log::error("Error in text to image: {$err->getMessage()}", ['exception' => $err]);
             throw new Exception($err->getMessage());
         }
 
@@ -115,7 +115,7 @@ class StabilityAIClient
 
             return $files;
         } catch (Throwable $err) {
-            Log::error("Error in textToImage: {$err->getMessage()}", ['exception' => $err]);
+            Log::error("Error in image to image: {$err->getMessage()}", ['exception' => $err]);
             throw new Exception($err->getMessage());
         }
 
