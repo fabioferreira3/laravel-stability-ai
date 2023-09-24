@@ -2,10 +2,10 @@
 
 namespace Talendor\StabilityAI;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Talendor\StabilityAI\Enums\StabilityAIEngine;
-use Talendor\StabilityAI\Enums\StylePreset;
 use Talendor\StabilityAI\Exceptions\BadRequestException;
 use Throwable;
 
@@ -31,15 +31,62 @@ class StabilityAIClient
         return $response->body();
     }
 
-    public function textToImage(StabilityAIEngine $engine, array $params)
+    public function textToImage(array $params, StabilityAIEngine $engine = null)
     {
+        if (!$engine) {
+            $engine = StabilityAIEngine::SD_XL_V_1;
+        }
         try {
             $response = $this->client->post($this->generationEndpoint . '/' . $engine->value . '/text-to-image', [
-                'style_preset' => $params['style_preset'] ?? StylePreset::tryFrom('pixel-art')->value,
-                'steps' => $params['steps'] ?? 50,
+                'style_preset' => $params['style_preset'],
+                'steps' => $params['steps'] ?? 30,
                 'height' => $params['height'],
                 'width' => $params['width'],
                 'samples' => $params['samples'] ?? 1,
+                'text_prompts' => [
+                    [
+                        'text' => $params['prompt'],
+                        'weight' => $params['weight'] ?? 1
+                    ]
+                ]
+            ]);
+
+            if ($response->failed()) {
+                throw new BadRequestException($response->body());
+            }
+
+            $content = json_decode($response->body(), true);
+            $files = [];
+
+            if (isset($content['artifacts']) && is_array($content['artifacts'])) {
+                foreach ($content['artifacts'] as $artifact) {
+                    if (isset($artifact['base64'])) {
+                        $base64String = $artifact['base64'];
+
+                        $imageData = base64_decode($base64String);
+                        $fileName = uniqid() . '.png';
+                        $files[] = ['fileName' => $fileName, 'imageData' => $imageData];
+                    }
+                }
+            }
+
+            return $files;
+        } catch (Throwable $err) {
+            Log::error("Error in textToImage: {$err->getMessage()}", ['exception' => $err]);
+            throw new Exception($err->getMessage());
+        }
+
+        return collect([]);
+    }
+
+    public function imageToImage(StabilityAIEngine $engine, array $params)
+    {
+        try {
+            $response = $this->client->post($this->generationEndpoint . '/' . $engine->value . '/image-to-image', [
+                'init_image' => $params['init_image'],
+                'style_preset' => $params['style_preset'],
+                'steps' => $params['steps'] ?? 30,
+                'samples' => $params['samples'] ?? 4,
                 'text_prompts' => [
                     [
                         'text' => $params['text'],
@@ -53,23 +100,23 @@ class StabilityAIClient
             }
 
             $content = json_decode($response->body(), true);
-            $artifacts = collect([]);
+            $files = [];
 
             if (isset($content['artifacts']) && is_array($content['artifacts'])) {
                 foreach ($content['artifacts'] as $artifact) {
                     if (isset($artifact['base64'])) {
                         $base64String = $artifact['base64'];
-
                         $imageData = base64_decode($base64String);
                         $fileName = uniqid() . '.png';
-                        $artifacts->push(['fileName' => $fileName, 'imageData' => $imageData]);
+                        $files[] = ['fileName' => $fileName, 'imageData' => $imageData];
                     }
                 }
             }
 
-            return $artifacts;
+            return $files;
         } catch (Throwable $err) {
             Log::error("Error in textToImage: {$err->getMessage()}", ['exception' => $err]);
+            throw new Exception($err->getMessage());
         }
 
         return collect([]);
