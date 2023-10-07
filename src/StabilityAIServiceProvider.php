@@ -11,6 +11,9 @@ class StabilityAIServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../config/stabilityai.php' => config_path('stabilityai.php'),
         ]);
+        $this->publishes([
+            __DIR__ . '/resources/images' => public_path('vendor/talendor/laravel-stability-ai/images'),
+        ], 'public');
     }
 
     public function register()
